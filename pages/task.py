@@ -26,10 +26,12 @@ layout = html.Div(
 )
 def render_table(query):
     qs = parse_qs(query.lstrip("?")) if query else {}
-    task_id_str = qs.get("id", ["1"])[0]
+    task_id_str = qs.get("id", [""])[0]
 
     if task_id_str is None:
         return html.Div("No task ID provided")
+    elif task_id_str == "":
+        return html.Div("Empty task ID provided")
     elif not task_id_str.isdigit():
         return html.Div("Invalid task ID")
 
