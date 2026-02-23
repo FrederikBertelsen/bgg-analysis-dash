@@ -1,19 +1,16 @@
-from backend.db import get_db_session, init_db
-from backend.repositories import BoardGameRepository
-from scraping.scrape_boardgames_links import scrape_boardgames_links
+from dash import Dash
 
+from backend.db import init_db
+from frontend.page_container import app_layout
 
-def main():
+app = Dash(__name__, use_pages=True, health_endpoint='/health')
+
+app.layout = app_layout()
+
+# expose the underlying Flask server so WSGI servers (gunicorn) can find it
+server = app.server
+
+if __name__ == '__main__':
     init_db()
-
-    scrape_boardgames_links(10)
-
-    with get_db_session() as session:
-        boardgames = BoardGameRepository.get_all(session)
-        print(f"Found {len(boardgames)} board games in the database:")
-        for bg in boardgames[:10]:
-            print(bg.name)
-
-
-if __name__ == "__main__":
-    main()
+    
+    app.run(debug=True, dev_tools_hot_reload=True)

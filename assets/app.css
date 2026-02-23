@@ -1,0 +1,42 @@
+.page {
+    margin-top: 3rem;
+}
+
+.navbar {
+    position: fixed;
+
+    top: 1rem;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.navbar .links {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.navbar .links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+.navbar .links a:hover {
+    color: #007bff;
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0 12px;
+    }
+
+    .navbar .links {
+        gap: 10px;
+    }
+}
