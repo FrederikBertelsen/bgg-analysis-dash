@@ -17,7 +17,7 @@ def _fetch_tasks_df():
         df_tasks = model_list_to_dataframe(tasks)
 
     df_tasks = df_tasks[
-        ["id", "name", "status", "progress", "last_update", "created_at"]
+        ["id", "name", "status", "progress", "last_update", "created_at", "eta"]
     ]
 
     df_tasks["progress"] = (df_tasks["progress"] * 100).round(0).astype(int).astype(

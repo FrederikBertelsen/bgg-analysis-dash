@@ -1,3 +1,6 @@
+from datetime import timedelta, datetime
+from typing import cast
+
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import (
     Column,
@@ -12,6 +15,8 @@ from sqlalchemy import (
     Enum as SAEnum,
 )
 import enum
+
+from backend.utils import estimate_eta
 
 Base = declarative_base()
 
@@ -87,16 +92,35 @@ class ScrapeTask(ModelBase):
     )
 
     def to_dict(self):
+        # Safely determine runtime status using a plain Python bool to avoid SQLAlchemy ColumnElement in conditionals
+        status = getattr(self, "status", None)
+        is_running = False
+        if isinstance(status, self.ScrapeStatus):
+            is_running = status == self.ScrapeStatus.running
+
         return {
             "id": self.id,
             "name": self.name,
-            "status": self.status.value,
+            "status": (
+                status.value
+                if isinstance(status, self.ScrapeStatus)
+                else getattr(status, "value", status)
+            ),
             "progress": self.progress,
             "current_page": self.current_page,
             "items_processed": self.items_processed,
             "message": self.message,
             "created_at": _format_datetime(self.created_at),
             "last_update": _format_datetime(self.last_update),
+            "eta": (
+                estimate_eta(
+                    cast(float, self.progress),
+                    cast(datetime, self.last_update),
+                    cast(datetime, self.created_at),
+                )
+                if is_running
+                else None
+            ),
         }
 
 
