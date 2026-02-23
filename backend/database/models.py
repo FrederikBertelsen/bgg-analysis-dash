@@ -16,6 +16,19 @@ import enum
 Base = declarative_base()
 
 
+def _format_datetime(dt):
+    """Return a human-readable datetime string or None.
+
+    Falls back to ISO format on unexpected errors.
+    """
+    if dt is None:
+        return None
+    try:
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return getattr(dt, "isoformat", lambda: None)()
+
+
 class ModelBase(Base):
     __abstract__ = True
 
@@ -82,8 +95,8 @@ class ScrapeTask(ModelBase):
             "current_page": self.current_page,
             "items_processed": self.items_processed,
             "message": self.message,
-            "created_at": self.created_at.isoformat(),
-            "last_update": self.last_update.isoformat(),
+            "created_at": _format_datetime(self.created_at),
+            "last_update": _format_datetime(self.last_update),
         }
 
 
@@ -107,7 +120,7 @@ class ScrapeLog(ModelBase):
             "id": self.id,
             "task_id_fk": self.task_id_fk,
             "line_no": self.line_no,
-            "created_at": self.created_at.isoformat(),
+            "created_at": _format_datetime(self.created_at),
             "text": self.text,
         }
 
