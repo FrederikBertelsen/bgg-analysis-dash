@@ -14,9 +14,9 @@ If an exception is raised within the context, the logger will automatically mark
 
 from typing import Optional, cast
 
-from .db import get_db_session
+from .database.db import get_db_session
 from .repositories import ScrapeTaskRepository, ScrapeLogRepository
-from .schemas import ScrapeStatus
+from .database.schemas import ScrapeStatus
 
 
 class ScrapeDBLogger:
@@ -53,7 +53,7 @@ class ScrapeDBLogger:
                 ScrapeTaskRepository.update_progress(
                     session,
                     int(cast(int, self.task_id)),
-                    status=ScrapeStatus.running.value,
+                    status=ScrapeStatus.running,
                 )
             else:
                 # new task
@@ -62,7 +62,7 @@ class ScrapeDBLogger:
                         "Either task_name or task_id must be provided to start a task"
                     )
                 task = ScrapeTaskRepository.create_task(
-                    session, name=self.task_name, status=ScrapeStatus.running.value
+                    session, name=self.task_name, status=ScrapeStatus.running
                 )
                 # convert to int to avoid SQLAlchemy Column typing leaking through
                 self.task_id = int(cast(int, task.id))
@@ -81,7 +81,7 @@ class ScrapeDBLogger:
     def update_progress(
         self,
         progress: Optional[float] = None,
-        status: Optional[str] = None,
+        status: Optional[ScrapeStatus] = None,
         current_page: Optional[int] = None,
         items_processed: Optional[int] = None,
         message: Optional[str] = None,
@@ -108,7 +108,7 @@ class ScrapeDBLogger:
                 session,
                 int(self.task_id),
                 progress=1.0,
-                status=ScrapeStatus.completed.value,
+                status=ScrapeStatus.completed,
                 message=message,
             )
             if message:
@@ -122,7 +122,7 @@ class ScrapeDBLogger:
             ScrapeTaskRepository.update_progress(
                 session,
                 int(self.task_id),
-                status=ScrapeStatus.failed.value,
+                status=ScrapeStatus.failed,
                 message=message,
             )
             ScrapeLogRepository.append_line(

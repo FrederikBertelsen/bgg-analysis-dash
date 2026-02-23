@@ -12,19 +12,22 @@ from backend.repositories.scrape_task_repository import ScrapeTaskRepository
 dash.register_page(__name__)
 
 
-layout = html.Div(
-    [
-        dcc.Location(id="url", refresh=False),
-        html.Div(id="task_info_container"),
-    ]
-)
+def layout(*args, **kwargs):
+    return html.Div(
+        [
+            dcc.Location(id="url", refresh=False),
+            dcc.Interval(id="task-interval", interval=5000, n_intervals=0),
+            html.Div(id="task_info_container"),
+        ]
+    )
 
 
 @dash.callback(
     Output("task_info_container", "children"),
     Input("url", "search"),
+    Input("task-interval", "n_intervals"),
 )
-def render_table(query):
+def render_table(query, n_intervals):
     qs = parse_qs(query.lstrip("?")) if query else {}
     task_id_str = qs.get("id", [""])[0]
 

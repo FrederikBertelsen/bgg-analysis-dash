@@ -21,14 +21,15 @@ def _fetch_df_for_page(page: int = 1, per_page: int = 10):
     return df_boardgames
 
 
-layout = html.Div(
-    [
-        dcc.Location(id="url", refresh=False),
-        html.H1("Boardgames"),
-        html.Div(id="table-container"),
-        html.Div(id="pagination-container", style={"marginTop": "1rem"}),
-    ],
-)
+def layout(*args, **kwargs):
+    return html.Div(
+        [
+            dcc.Location(id="url", refresh=False),
+            html.H1("Boardgames"),
+            html.Div(id="table-container"),
+            html.Div(id="pagination-container", style={"marginTop": "1rem"}),
+        ],
+    )
 
 
 @dash.callback(

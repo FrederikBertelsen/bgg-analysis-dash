@@ -24,30 +24,37 @@ def _fetch_tasks_df():
         str
     ) + "%"
 
+    # sort by last_update
+    df_tasks = df_tasks.sort_values("last_update", ascending=False).reset_index(
+        drop=True
+    )
+
     return df_tasks
 
 
-layout = html.Div(
-    children=[
-        html.H1("Scraping"),
-        html.H2("Scrape Tasks"),
-        dcc.Interval(id="tasks-interval", interval=5000, n_intervals=0),
-        html.Div(
-            id="tasks-table-container",
-            children=[
-                dbc.Table.from_dataframe(  # type: ignore
-                    _fetch_tasks_df(),
-                    id="tasks-table",
-                    striped=True,
-                    bordered=True,
-                    hover=True,
-                    responsive=True,
-                )
-            ],
-        ),
-        html.Div(id="dummy-output", style={"display": "none"}),
-    ]
-)
+def layout(*args, **kwargs):
+    return html.Div(
+        children=[
+            html.H1("Scraping"),
+            html.H2("Scrape Tasks"),
+            dcc.Interval(id="tasks-interval", interval=5000, n_intervals=0),
+            html.Div(
+                id="tasks-table-container",
+                children=[
+                    dbc.Table.from_dataframe(  # type: ignore
+                        _fetch_tasks_df(),
+                        id="tasks-table",
+                        striped=True,
+                        bordered=True,
+                        hover=True,
+                        responsive=True,
+                    )
+                ],
+            ),
+            html.Div(id="dummy-output", style={"display": "none"}),
+        ]
+    )
+
 
 app.clientside_callback(
     """
@@ -69,3 +76,20 @@ app.clientside_callback(
     Output("dummy-output", "children"),
     Input("tasks-table-container", "children"),
 )
+
+
+@app.callback(
+    Output("tasks-table-container", "children"),
+    Input("tasks-interval", "n_intervals"),
+)
+def _update_tasks_table(n_intervals: int):
+    return [
+        dbc.Table.from_dataframe(  # type: ignore
+            _fetch_tasks_df(),
+            id="tasks-table",
+            striped=True,
+            bordered=True,
+            hover=True,
+            responsive=True,
+        )
+    ]

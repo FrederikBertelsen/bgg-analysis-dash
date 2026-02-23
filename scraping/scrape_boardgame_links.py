@@ -1,7 +1,7 @@
-from backend.db import get_db_session
+from backend.database.db import get_db_session
 from backend.logger import ScrapeDBLogger
 from backend.repositories import BoardGameRepository, ScrapeTaskRepository
-from backend.schemas import BoardGameIn
+from backend.database.schemas import BoardGameIn
 from scraping.camoufox_wrapper import CamoufoxWrapper
 from scraping.page_wrapper import PageWrapper
 

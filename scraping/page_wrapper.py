@@ -42,7 +42,7 @@ class PageWrapper:
         attempts = 0
         while True:
             try:
-                self.page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                self.page.goto(url, timeout=15000)  # , wait_until="domcontentloaded")
                 return
             except Exception as e:
                 if attempts >= retries:
