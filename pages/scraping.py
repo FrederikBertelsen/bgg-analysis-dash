@@ -1,5 +1,5 @@
 import dash
-from dash import html, Input, Output
+from dash import html, Input, Output, dcc
 
 from backend.database.db import get_db_session
 from backend.repositories.scrape_task_repository import ScrapeTaskRepository
@@ -31,13 +31,19 @@ layout = html.Div(
     children=[
         html.H1("Scraping"),
         html.H2("Scrape Tasks"),
-        dbc.Table.from_dataframe(  # type: ignore
-            _fetch_tasks_df(),
-            id="tasks-table",
-            striped=True,
-            bordered=True,
-            hover=True,
-            responsive=True,
+        dcc.Interval(id="tasks-interval", interval=5000, n_intervals=0),
+        html.Div(
+            id="tasks-table-container",
+            children=[
+                dbc.Table.from_dataframe(  # type: ignore
+                    _fetch_tasks_df(),
+                    id="tasks-table",
+                    striped=True,
+                    bordered=True,
+                    hover=True,
+                    responsive=True,
+                )
+            ],
         ),
         html.Div(id="dummy-output", style={"display": "none"}),
     ]
@@ -61,5 +67,5 @@ app.clientside_callback(
     }
     """,
     Output("dummy-output", "children"),
-    Input("tasks-table", "children"),
+    Input("tasks-table-container", "children"),
 )
