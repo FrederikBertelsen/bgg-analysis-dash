@@ -30,3 +30,5 @@ def init_db():
     from . import models
 
     models.Base.metadata.create_all(bind=engine)
+
+    print("\nDatabase initialized successfully.\n")
