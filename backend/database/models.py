@@ -16,7 +16,14 @@ import enum
 Base = declarative_base()
 
 
-class BoardGame(Base):
+class ModelBase(Base):
+    __abstract__ = True
+
+    def to_dict(self):
+        raise NotImplementedError("Subclasses must implement to_dict() method")
+
+
+class BoardGame(ModelBase):
     __tablename__ = "boardgames"
 
     id = Column(Integer, primary_key=True)
@@ -31,7 +38,7 @@ class BoardGame(Base):
         return {"id": self.id, "name": self.name, "url": self.url}
 
 
-class ScrapeTask(Base):
+class ScrapeTask(ModelBase):
     __tablename__ = "scrape_tasks"
 
     id = Column(Integer, primary_key=True)
@@ -80,7 +87,7 @@ class ScrapeTask(Base):
         }
 
 
-class ScrapeLog(Base):
+class ScrapeLog(ModelBase):
     __tablename__ = "scrape_logs"
 
     id = Column(Integer, primary_key=True)

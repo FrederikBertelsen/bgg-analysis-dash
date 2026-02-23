@@ -1,15 +1,18 @@
 from typing import List, Optional
+import pandas as pd
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from backend.database.schemas import ScrapeStatus
+
 from .base_repository import BaseRepository
-from .. import models
+from ..database import models
 
 
 class ScrapeTaskRepository(BaseRepository):
     @staticmethod
     def create_task(
-        session: Session, name: str, status: str = "pending"
+        session: Session, name: str, status: ScrapeStatus = ScrapeStatus.pending
     ) -> models.ScrapeTask:
         task = models.ScrapeTask(name=name, status=status, progress=0.0)
         session.add(task)
@@ -27,10 +30,10 @@ class ScrapeTaskRepository(BaseRepository):
         )
 
     @staticmethod
-    def get_by_status(session: Session, status: str) -> List[models.ScrapeTask]:
+    def get_by_status(session: Session, status: ScrapeStatus) -> List[models.ScrapeTask]:
         return list(
             session.execute(
-                select(models.ScrapeTask).where(models.ScrapeTask.status == status)
+                select(models.ScrapeTask).where(models.ScrapeTask.status == status.value)
             )
             .scalars()
             .all()
@@ -45,7 +48,7 @@ class ScrapeTaskRepository(BaseRepository):
         session: Session,
         task_id: int,
         progress: Optional[float] = None,
-        status: Optional[str] = None,
+        status: Optional[ScrapeStatus] = None,
         current_page: Optional[int] = None,
         items_processed: Optional[int] = None,
         message: Optional[str] = None,
@@ -58,7 +61,7 @@ class ScrapeTaskRepository(BaseRepository):
         if progress is not None:
             values["progress"] = progress
         if status is not None:
-            values["status"] = status
+            values["status"] = status.value
         if current_page is not None:
             values["current_page"] = current_page
         if items_processed is not None:

@@ -4,8 +4,9 @@ import dash_bootstrap_components as dbc
 
 from urllib.parse import parse_qs
 
-from backend.db import get_db_session
+from backend.database.db import get_db_session
 from backend.repositories import BoardGameRepository
+from backend.utils import model_list_to_dataframe
 
 dash.register_page(__name__)
 
@@ -14,8 +15,8 @@ def _fetch_df_for_page(page: int = 1, per_page: int = 10):
     skip = (page - 1) * per_page
 
     with get_db_session() as session:
-        df = BoardGameRepository.get_some_as_dataframe(
-            session, skip=skip, take=per_page
+        df = model_list_to_dataframe(
+            BoardGameRepository.get_some(session, skip=skip, take=per_page)
         )
     return df
 

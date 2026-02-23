@@ -2,8 +2,8 @@ from typing import List, Optional
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from backend.database import models
 from .base_repository import BaseRepository
-from .. import models
 
 
 class ScrapeLogRepository(BaseRepository):

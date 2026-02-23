@@ -1,8 +1,7 @@
 from dash import Dash
 import dash_bootstrap_components as dbc
 
-from backend.db import get_db_session, init_db
-from backend.repositories import BoardGameRepository
+from backend.database.db import init_db
 from frontend.page_container import app_layout
 
 app = Dash(

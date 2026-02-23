@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 import pandas as pd
 
 from .base_repository import BaseRepository
-from .. import models
-from ..schemas import BoardGameIn
+from ..database import models
+from ..database.schemas import BoardGameIn
 
 
 class BoardGameRepository(BaseRepository):
@@ -58,18 +58,3 @@ class BoardGameRepository(BaseRepository):
     @staticmethod
     def get_all(session: Session) -> List[models.BoardGame]:
         return list(session.execute(select(models.BoardGame)).scalars().all())
-
-    @staticmethod
-    def get_some_as_dataframe(
-        session: Session, skip: int = 0, take: int = 100
-    ) -> pd.DataFrame:
-        boardgames = BoardGameRepository.get_some(session, skip, take)
-        boardgame_dicts = [boardgame.to_dict() for boardgame in boardgames]
-        return pd.DataFrame(boardgame_dicts)
-
-    @staticmethod
-    def get_all_as_dataframe(session: Session):
-
-        boardgames = BoardGameRepository.get_all(session)
-        boardgame_dicts = [boardgame.to_dict() for boardgame in boardgames]
-        return pd.DataFrame(boardgame_dicts)
