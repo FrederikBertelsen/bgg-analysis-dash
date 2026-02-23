@@ -1,17 +1,22 @@
-
 from dash import html, dcc
 import dash
+import dash_bootstrap_components as dbc
+
 
 def app_layout():
-    return html.Div(className='container', children=[
-    # navbar
-    html.Div(className='navbar', children=[
-        html.Div(className='links', children=[
-            html.Div(
-                dcc.Link(f"{page['name']}", href=page["relative_path"]) 
-            ) for page in dash.page_registry.values()
-        ]),
-    ]),
-    # page container
-    dash.page_container
-])
+    # build nav items from registered pages
+    nav_items = []
+    for page in dash.page_registry.values():
+        nav_items.append(
+            dbc.NavItem(dbc.NavLink(page["name"], href=page["relative_path"]))
+        )
+
+    navbar = dbc.NavbarSimple(
+        children=nav_items,
+        brand=dbc.NavbarBrand("BGG Analysis"),
+        brand_href="/",
+        color="dark",
+        dark=True,
+    )
+
+    return html.Div([navbar, dash.page_container])

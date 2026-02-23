@@ -3,6 +3,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy import select, update, func
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
+import pandas as pd
 
 from . import models
 from .schemas import BoardGameIn
@@ -40,8 +41,43 @@ class BoardGameRepository(BaseRepository):
         session.execute(stmt)
 
     @staticmethod
+    def get(session: Session, boardgame_id: int) -> Optional[models.BoardGame]:
+        return (
+            session.execute(
+                select(models.BoardGame).where(models.BoardGame.id == boardgame_id)
+            )
+            .scalars()
+            .first()
+        )
+
+    @staticmethod
+    def get_some(
+        session: Session, skip: int = 0, take: int = 100
+    ) -> List[models.BoardGame]:
+        return list(
+            session.execute(select(models.BoardGame).offset(skip).limit(take))
+            .scalars()
+            .all()
+        )
+
+    @staticmethod
     def get_all(session: Session) -> List[models.BoardGame]:
         return list(session.execute(select(models.BoardGame)).scalars().all())
+
+    @staticmethod
+    def get_some_as_dataframe(
+        session: Session, skip: int = 0, take: int = 100
+    ) -> pd.DataFrame:
+        boardgames = BoardGameRepository.get_some(session, skip, take)
+        boardgame_dicts = [boardgame.to_dict() for boardgame in boardgames]
+        return pd.DataFrame(boardgame_dicts)
+
+    @staticmethod
+    def get_all_as_dataframe(session: Session):
+
+        boardgames = BoardGameRepository.get_all(session)
+        boardgame_dicts = [boardgame.to_dict() for boardgame in boardgames]
+        return pd.DataFrame(boardgame_dicts)
 
 
 class ScrapeTaskRepository(BaseRepository):

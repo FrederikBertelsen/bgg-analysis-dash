@@ -27,6 +27,9 @@ class BoardGame(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
+    def to_dict(self):
+        return {"id": self.id, "name": self.name, "url": self.url}
+
 
 class ScrapeTask(Base):
     __tablename__ = "scrape_tasks"
