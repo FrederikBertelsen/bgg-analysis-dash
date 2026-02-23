@@ -1,15 +1,35 @@
 from playwright.sync_api import Page, Locator
+from typing import Optional, Any
 import random
+
+from backend.logger import ScrapeDBLogger
 
 
 class PageWrapper:
-    def __init__(self, page: Page, print_exceptions: bool = True):
+    def __init__(self, page: Page, logger: ScrapeDBLogger):
         self.page = page
-        self.print_exceptions = print_exceptions
+        self.logger = logger
 
     def _print_error(self, context: str, e: Exception):
-        if self.print_exceptions:
-            print(f"Error {context}: {e}")
+        import traceback
+
+        msg = f"Error {context}: {e}"
+        payload = f"{msg}\n{traceback.format_exc()}"
+
+        # Prefer structured DB log, then console.
+        try:
+            self.logger.log(payload)
+            return
+        except Exception:
+            pass
+
+        try:
+            self.logger.console_log(payload)
+            return
+        except Exception:
+            pass
+
+        print(f"Failed to log error {payload}")
 
     def content(self) -> str:
         try:

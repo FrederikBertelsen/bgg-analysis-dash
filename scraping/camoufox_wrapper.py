@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from camoufox.sync_api import Camoufox
 
+from backend.logger import ScrapeDBLogger
 from scraping.page_wrapper import PageWrapper
 
 
@@ -38,7 +39,7 @@ class CamoufoxWrapper:
                 self._browser.close()
                 self._browser = None
 
-    def new_page(self):
+    def new_page(self, logger: ScrapeDBLogger) -> PageWrapper:
         if not self._browser:
             raise RuntimeError(
                 "Browser not started. Use start_browser() context manager."
@@ -46,4 +47,4 @@ class CamoufoxWrapper:
 
         page = self._browser.new_page()
 
-        return PageWrapper(page)
+        return PageWrapper(page, logger)
