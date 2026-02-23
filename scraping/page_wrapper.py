@@ -18,12 +18,21 @@ class PageWrapper:
             self._print_error("getting content", e)
             raise
 
-    def goto(self, url: str):
-        try:
-            self.page.goto(url, wait_until="domcontentloaded")
-        except Exception as e:
-            self._print_error(f"going to {url}", e)
-            raise
+    def goto(self, url: str, retries: int = 2):
+        attempts = 0
+        while True:
+            try:
+                self.page.goto(url, wait_until="domcontentloaded", timeout=15000)
+                return
+            except Exception as e:
+                if attempts >= retries:
+                    self._print_error(f"going to {url}", e)
+                    raise
+
+                attempts += 1
+                self._print_error(f"going to {url} (attempt {attempts}/{retries})", e)
+                # small random backoff before retrying
+                self.sleep_random(500, 1500)
 
     def locator(self, selector: str, has_text: str | None = None) -> Locator:
         try:
