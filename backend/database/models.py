@@ -66,6 +66,19 @@ class ScrapeTask(Base):
         passive_deletes=True,
     )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "status": self.status.value,
+            "progress": self.progress,
+            "current_page": self.current_page,
+            "items_processed": self.items_processed,
+            "message": self.message,
+            "created_at": self.created_at.isoformat(),
+            "last_update": self.last_update.isoformat(),
+        }
+
 
 class ScrapeLog(Base):
     __tablename__ = "scrape_logs"
@@ -81,6 +94,15 @@ class ScrapeLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     text = Column(Text, nullable=False)
     task = relationship("ScrapeTask", back_populates="logs")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "task_id_fk": self.task_id_fk,
+            "line_no": self.line_no,
+            "created_at": self.created_at.isoformat(),
+            "text": self.text,
+        }
 
 
 # Composite index for fast retrieval of latest lines per task.
