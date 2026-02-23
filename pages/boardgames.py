@@ -15,10 +15,10 @@ def _fetch_df_for_page(page: int = 1, per_page: int = 10):
     skip = (page - 1) * per_page
 
     with get_db_session() as session:
-        df = model_list_to_dataframe(
-            BoardGameRepository.get_some(session, skip=skip, take=per_page)
-        )
-    return df
+        boardgames = BoardGameRepository.get_some(session, skip=skip, take=per_page)
+        df_boardgames = model_list_to_dataframe(boardgames)
+
+    return df_boardgames
 
 
 layout = html.Div(
@@ -36,8 +36,8 @@ layout = html.Div(
     Output("pagination-container", "children"),
     Input("url", "search"),
 )
-def render_table(search):
-    qs = parse_qs(search.lstrip("?")) if search else {}
+def render_table(query):
+    qs = parse_qs(query.lstrip("?")) if query else {}
     page_str = qs.get("page", ["1"])[0]
     try:
         page = max(1, int(page_str))
