@@ -6,7 +6,7 @@ from backend.logger import ScrapeTaskLogger
 
 
 class PageWrapper:
-    def __init__(self, page: Page, logger: ScrapeTaskLogger):
+    def __init__(self, page: Page, logger: Optional[ScrapeTaskLogger]):
         self.page = page
         self.logger = logger
 
@@ -15,6 +15,10 @@ class PageWrapper:
 
         msg = f"Error {context}: {e}"
         payload = f"{msg}\n{traceback.format_exc()}"
+
+        if self.logger is None:
+            print(payload)
+            return
 
         # Prefer structured DB log, then console.
         try:
@@ -72,6 +76,14 @@ class PageWrapper:
             return True
         except Exception as e:
             self._print_error(f'clicking element "{selector}"', e)
+            return False
+
+    def click_coordinates(self, x: float, y: float) -> bool:
+        try:
+            self.page.mouse.click(x, y)
+            return True
+        except Exception as e:
+            self._print_error(f'clicking coordinates ({x}, {y})', e)
             return False
 
     def get_text(self, selector: str, has_text: str | None = None) -> str | None:

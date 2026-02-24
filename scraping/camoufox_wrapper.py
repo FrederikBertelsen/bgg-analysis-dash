@@ -1,5 +1,7 @@
 from contextlib import contextmanager
+from typing import Optional
 from camoufox.sync_api import Camoufox
+from playwright.sync_api import sync_playwright
 
 from backend.logger import ScrapeTaskLogger
 from scraping.page_wrapper import PageWrapper
@@ -12,10 +14,10 @@ class CamoufoxWrapper:
     @contextmanager
     def start_browser(
         self,
-        headless: bool = False,
+        headless: bool = True,
         humanize: bool = False,
         enable_cache: bool = True,
-        block_images: bool = True,
+        block_images: bool = False,
     ):
         """
         Context manager that launches Camoufox and yields this wrapper.
@@ -31,7 +33,11 @@ class CamoufoxWrapper:
             humanize=humanize,
             enable_cache=enable_cache,
             block_images=block_images,
+            geoip=False,
         ) as browser:
+        # with sync_playwright() as p:
+        #     browser = p.chromium.launch(headless=headless)
+            
             self._browser = browser
             try:
                 yield self
@@ -39,7 +45,7 @@ class CamoufoxWrapper:
                 self._browser.close()
                 self._browser = None
 
-    def new_page(self, logger: ScrapeTaskLogger) -> PageWrapper:
+    def new_page(self, logger: Optional[ScrapeTaskLogger] = None) -> PageWrapper:
         if not self._browser:
             raise RuntimeError(
                 "Browser not started. Use start_browser() context manager."
