@@ -1,12 +1,12 @@
 from backend.database.db import get_db_session
-from backend.logger import ScrapeDBLogger
+from backend.logger import ScrapeTaskLogger
 from backend.repositories import BoardGameRepository, ScrapeTaskRepository
 from backend.database.schemas import BoardGameIn
 from scraping.camoufox_wrapper import CamoufoxWrapper
 from scraping.page_wrapper import PageWrapper
 
 
-def login(page: PageWrapper) -> bool:
+def login(page: PageWrapper, logger: ScrapeTaskLogger) -> bool:
     page.goto("https://www.boardgamegeek.com/login")
 
     # if page.exists('div[role="alert"]', has_text="You are already logged in"):
@@ -14,7 +14,7 @@ def login(page: PageWrapper) -> bool:
     #     return True
 
     if not page.exists("gg-login-page"):
-        print("Login page not found")
+        logger.fail("Login page not found")
         return False
 
     # agree to cookies if banner is present
@@ -33,7 +33,7 @@ def login(page: PageWrapper) -> bool:
     )
 
     if not page.exists("gg-avatar-letter > span", has_text="O"):
-        print("Login verification failed: Avatar not found")
+        logger.fail("Login verification failed: Avatar not found")
         return False
 
     page.sleep(3000)
@@ -48,7 +48,7 @@ def login(page: PageWrapper) -> bool:
 
 
 def scrape_boardgames_links(pages: int = 10, log_to_console: bool = True):
-    with ScrapeDBLogger(
+    with ScrapeTaskLogger(
         task_name="scrape_boardgames_links", log_to_console=log_to_console
     ) as logger:
         logger.log("Started")
@@ -58,7 +58,7 @@ def scrape_boardgames_links(pages: int = 10, log_to_console: bool = True):
         with CamoufoxWrapper().start_browser() as browser:
             page = browser.new_page(logger)
 
-            logged_in = login(page)
+            logged_in = login(page, logger)
             if not logged_in:
                 logger.fail("Login failed")
                 return

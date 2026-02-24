@@ -2,11 +2,11 @@ from playwright.sync_api import Page, Locator
 from typing import Optional, Any
 import random
 
-from backend.logger import ScrapeDBLogger
+from backend.logger import ScrapeTaskLogger
 
 
 class PageWrapper:
-    def __init__(self, page: Page, logger: ScrapeDBLogger):
+    def __init__(self, page: Page, logger: ScrapeTaskLogger):
         self.page = page
         self.logger = logger
 

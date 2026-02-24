@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from typing import cast
+from typing import cast, Optional, Any, Dict
 
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import (
@@ -13,35 +13,17 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Enum as SAEnum,
+    Boolean,
+    JSON,
 )
 import enum
 
-from backend.utils import estimate_eta
+from backend.utils import parse_datetime, format_datetime
 
 Base = declarative_base()
 
 
-def _format_datetime(dt):
-    """Return a human-readable datetime string or None.
-
-    Falls back to ISO format on unexpected errors.
-    """
-    if dt is None:
-        return None
-    try:
-        return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except Exception:
-        return getattr(dt, "isoformat", lambda: None)()
-
-
-class ModelBase(Base):
-    __abstract__ = True
-
-    def to_dict(self):
-        raise NotImplementedError("Subclasses must implement to_dict() method")
-
-
-class BoardGame(ModelBase):
+class BoardGame(Base):
     __tablename__ = "boardgames"
 
     id = Column(Integer, primary_key=True)
@@ -52,17 +34,15 @@ class BoardGame(ModelBase):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    def to_dict(self):
-        return {"id": self.id, "name": self.name, "url": self.url}
 
-
-class ScrapeTask(ModelBase):
+class ScrapeTask(Base):
     __tablename__ = "scrape_tasks"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), nullable=False, index=True)
 
     class ScrapeStatus(enum.Enum):
+        none = "none"
         pending = "pending"
         running = "running"
         completed = "completed"
@@ -71,7 +51,7 @@ class ScrapeTask(ModelBase):
     status = Column(
         SAEnum(ScrapeStatus, name="scrape_status", native_enum=False),
         nullable=False,
-        default=ScrapeStatus.pending,
+        default=ScrapeStatus.none,
     )
     progress = Column(Float, nullable=False, default=0.0)
     current_page = Column(Integer, nullable=True)
@@ -91,44 +71,12 @@ class ScrapeTask(ModelBase):
         passive_deletes=True,
     )
 
-    def to_dict(self):
-        # Safely determine runtime status using a plain Python bool to avoid SQLAlchemy ColumnElement in conditionals
-        status = getattr(self, "status", None)
-        is_running = False
-        if isinstance(status, self.ScrapeStatus):
-            is_running = status == self.ScrapeStatus.running
 
-        return {
-            "id": self.id,
-            "name": self.name,
-            "status": (
-                status.value
-                if isinstance(status, self.ScrapeStatus)
-                else getattr(status, "value", status)
-            ),
-            "progress": self.progress,
-            "current_page": self.current_page,
-            "items_processed": self.items_processed,
-            "message": self.message,
-            "created_at": _format_datetime(self.created_at),
-            "last_update": _format_datetime(self.last_update),
-            "eta": (
-                estimate_eta(
-                    cast(float, self.progress),
-                    cast(datetime, self.last_update),
-                    cast(datetime, self.created_at),
-                )
-                if is_running
-                else None
-            ),
-        }
-
-
-class ScrapeLog(ModelBase):
+class ScrapeLog(Base):
     __tablename__ = "scrape_logs"
 
     id = Column(Integer, primary_key=True)
-    task_id_fk = Column(
+    task_id = Column("task_id_fk",
         Integer,
         ForeignKey("scrape_tasks.id", ondelete="CASCADE"),
         nullable=False,
@@ -139,15 +87,25 @@ class ScrapeLog(ModelBase):
     text = Column(Text, nullable=False)
     task = relationship("ScrapeTask", back_populates="logs")
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "task_id_fk": self.task_id_fk,
-            "line_no": self.line_no,
-            "created_at": _format_datetime(self.created_at),
-            "text": self.text,
-        }
+
+class RawData(Base):
+    __tablename__ = "raw_data"
+
+    id = Column(Integer, primary_key=True)
+    source_table = Column(String(255), nullable=False, index=True)
+    source_id = Column(Integer, nullable=True, index=True)
+    scrape_task_id = Column(
+        Integer,
+        ForeignKey("scrape_tasks.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    payload = Column(JSON, nullable=False)
+    processed = Column(Boolean, nullable=False, default=False, server_default="false")
+    processor_version = Column(String(64), nullable=True)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 # Composite index for fast retrieval of latest lines per task.
-Index("ix_scrape_logs_task_line_no", ScrapeLog.task_id_fk, ScrapeLog.line_no.desc())
+Index("ix_scrape_logs_task_line_no", ScrapeLog.task_id, ScrapeLog.line_no.desc())

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 
 import pandas as pd
 
@@ -8,9 +8,30 @@ def model_list_to_dataframe(models: list) -> pd.DataFrame:
     if not models:
         return pd.DataFrame()
 
-    dicts = [m.to_dict() for m in models]
+    dicts = [m.model_dump() for m in models]
 
     return pd.DataFrame(dicts)
+
+
+def format_datetime(dt: Optional[datetime]) -> Optional[str]:
+    if dt is None:
+        return None
+    try:
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return getattr(dt, "isoformat", lambda: None)()
+
+
+def parse_datetime(dt_str: Optional[str]) -> Optional[datetime]:
+    if dt_str is None:
+        return None
+    try:
+        return datetime.strptime(dt_str, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        try:
+            return datetime.fromisoformat(dt_str)
+        except ValueError:
+            return None
 
 
 def estimate_eta(

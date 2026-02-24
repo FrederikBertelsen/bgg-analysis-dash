@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 import pandas as pd
 
 from .base_repository import BaseRepository
-from ..database import models
-from ..database.schemas import BoardGameIn
+from ..database import models, schemas
+from ..database.schemas import BoardGameIn, BoardGameOut
 
 
 class BoardGameRepository(BaseRepository):
@@ -36,25 +36,28 @@ class BoardGameRepository(BaseRepository):
         session.execute(stmt)
 
     @staticmethod
-    def get(session: Session, boardgame_id: int) -> Optional[models.BoardGame]:
-        return (
+    def get(session: Session, boardgame_id: int) -> Optional[BoardGameOut]:
+        obj = (
             session.execute(
                 select(models.BoardGame).where(models.BoardGame.id == boardgame_id)
             )
             .scalars()
             .first()
         )
+        return BoardGameOut.model_validate(obj) if obj is not None else None
 
     @staticmethod
     def get_some(
         session: Session, skip: int = 0, take: int = 100
-    ) -> List[models.BoardGame]:
-        return list(
+    ) -> List[BoardGameOut]:
+        objs = list(
             session.execute(select(models.BoardGame).offset(skip).limit(take))
             .scalars()
             .all()
         )
+        return [BoardGameOut.model_validate(o) for o in objs]
 
     @staticmethod
-    def get_all(session: Session) -> List[models.BoardGame]:
-        return list(session.execute(select(models.BoardGame)).scalars().all())
+    def get_all(session: Session) -> List[BoardGameOut]:
+        objs = list(session.execute(select(models.BoardGame)).scalars().all())
+        return [BoardGameOut.model_validate(o) for o in objs]

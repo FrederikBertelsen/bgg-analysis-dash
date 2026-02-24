@@ -16,10 +16,10 @@ from typing import Optional, cast
 
 from .database.db import get_db_session
 from .repositories import ScrapeTaskRepository, ScrapeLogRepository
-from .database.schemas import ScrapeStatus
+from .database.schemas import ScrapeStatus, ScrapeTaskCreate
 
 
-class ScrapeDBLogger:
+class ScrapeTaskLogger:
     def __init__(
         self,
         task_name: Optional[str] = None,
@@ -62,7 +62,10 @@ class ScrapeDBLogger:
                         "Either task_name or task_id must be provided to start a task"
                     )
                 task = ScrapeTaskRepository.create_task(
-                    session, name=self.task_name, status=ScrapeStatus.running
+                    session,
+                    ScrapeTaskCreate(
+                        name=self.task_name, status=ScrapeStatus.running, progress=0.0
+                    ),
                 )
                 # convert to int to avoid SQLAlchemy Column typing leaking through
                 self.task_id = int(cast(int, task.id))
