@@ -31,6 +31,22 @@ class CleanDataRepository(BaseRepository):
         return CleanDataOut.model_validate(obj) if obj is not None else None
 
     @staticmethod
+    def get_by_source_id_and_table(
+        session: Session, source_table: str, source_id: int
+    ) -> Optional[CleanDataOut]:
+        stmt = (
+            select(models.CleanData)
+            .where(
+                (models.CleanData.source_table == source_table)
+                & (models.CleanData.source_id == source_id)
+            )
+            .order_by(models.CleanData.created_at.desc())
+            .limit(1)
+        )
+        obj = session.execute(stmt).scalars().first()
+        return CleanDataOut.model_validate(obj) if obj is not None else None
+
+    @staticmethod
     def get_by_raw_id(session: Session, raw_id: int) -> List[CleanDataOut]:
         stmt = select(models.CleanData).where(models.CleanData.raw_id == raw_id)
         objs = list(session.execute(stmt).scalars().all())
@@ -60,14 +76,6 @@ class CleanDataRepository(BaseRepository):
         )
         obj = session.execute(stmt).scalars().first()
         return CleanDataOut.model_validate(obj) if obj is not None else None
-
-    @staticmethod
-    def get_by_source_table(session: Session, source_table: str) -> List[CleanDataOut]:
-        stmt = select(models.CleanData).where(
-            models.CleanData.source_table == source_table
-        )
-        objs = list(session.execute(stmt).scalars().all())
-        return [CleanDataOut.model_validate(o) for o in objs]
 
     @staticmethod
     def mark_error(

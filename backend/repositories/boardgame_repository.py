@@ -36,7 +36,7 @@ class BoardGameRepository(BaseRepository):
         session.execute(stmt)
 
     @staticmethod
-    def get(session: Session, boardgame_id: int) -> Optional[BoardGameOut]:
+    def get_by_id(session: Session, boardgame_id: int) -> Optional[BoardGameOut]:
         obj = (
             session.execute(
                 select(models.BoardGame).where(models.BoardGame.id == boardgame_id)

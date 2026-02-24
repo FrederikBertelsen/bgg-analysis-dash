@@ -54,7 +54,7 @@ def layout(*args, **kwargs):
                     )
                 ],
             ),
-            html.Div(id="dummy-output", style={"display": "none"}),
+            html.Div(id="scraping-dummy-output", style={"display": "none"}),
         ]
     )
 
@@ -76,7 +76,7 @@ app.clientside_callback(
         return '';
     }
     """,
-    Output("dummy-output", "children"),
+    Output("scraping-dummy-output", "children"),
     Input("tasks-table-container", "children"),
 )
 

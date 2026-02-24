@@ -177,7 +177,7 @@ def scrape_boardgames_info(log_to_console: bool = True):
                     RawDataRepository.create(
                         session,
                         raw_in=RawDataIn(
-                            source_table="boardgame_info",
+                            source_table="boardgames",
                             source_id=cast(int, boardgame.id),
                             scrape_task_id=logger.task_id,
                             payload=raw_game_data,

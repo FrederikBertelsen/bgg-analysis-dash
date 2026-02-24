@@ -10,6 +10,8 @@ from backend.utils import model_list_to_dataframe
 
 dash.register_page(__name__)
 
+app = dash.get_app()
+
 
 def _fetch_df_for_page(page: int = 1, per_page: int = 10):
     skip = (page - 1) * per_page
@@ -28,7 +30,8 @@ def layout(*args, **kwargs):
             html.H1("Boardgames"),
             html.Div(id="table-container"),
             html.Div(id="pagination-container", style={"marginTop": "1rem"}),
-        ],
+            html.Div(id="boardgames-dummy-output", style={"display": "none"}),
+        ]
     )
 
 
@@ -52,7 +55,12 @@ def render_table(query):
         table = html.Div("No data available")
     else:
         table = dbc.Table.from_dataframe(  # type: ignore
-            df, striped=True, bordered=True, hover=True, responsive=True
+            id="boardgames-table",
+            df=df,
+            striped=True,
+            bordered=True,
+            hover=True,
+            responsive=True,
         )
 
     prev_disabled = page <= 1
@@ -69,3 +77,25 @@ def render_table(query):
     pagination = html.Div([prev_link, page_indicator, next_link])
 
     return table, pagination
+
+
+app.clientside_callback(
+    """
+    function(children) {
+        const table = document.getElementById('boardgames-table');
+        if (!table) return '';
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(function(tr){
+            tr.style.cursor = 'pointer';
+            tr.onclick = function(){
+                const idCell = tr.querySelector('td:first-child');
+                const id = idCell && idCell.textContent.trim();
+                if (id) window.open(`/boardgame?id=${id}`, '_blank');
+            };
+        });
+        return '';
+    }
+    """,
+    Output("boardgames-dummy-output", "children"),
+    Input("table-container", "children"),
+)
