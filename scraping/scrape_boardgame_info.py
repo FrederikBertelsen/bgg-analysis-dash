@@ -4,7 +4,7 @@ from backend.database.db import get_db_session
 from backend.logger import ScrapeTaskLogger
 from backend.repositories import BoardGameRepository, ScrapeTaskRepository
 from backend.database.schemas import BoardGameIn, RawDataIn
-from backend.repositories.raw_repository import RawRepository
+from backend.repositories.raw_data_repository import RawDataRepository
 from scraping.camoufox_wrapper import CamoufoxWrapper
 from scraping.page_wrapper import PageWrapper
 
@@ -90,7 +90,7 @@ def scrape_boardgames_info(log_to_console: bool = True):
                 page.goto(f"{boardgame_url}/credits")
                 page.sleep_random(500, 1000)
 
-                raw_game_data["player_counts"] = page.get_text(
+                raw_game_data["player counts"] = page.get_text(
                     'li[itemprop="numberOfPlayers"]'
                 )
 
@@ -117,6 +117,10 @@ def scrape_boardgames_info(log_to_console: bool = True):
 
                 page.goto(f"{boardgame_url}/versions?showcount=50")
                 page.sleep_random(500, 1000)
+
+                page.wait_for_selector(
+                    "span[ng-if=\"ldata.displaytype==='dimensions'\"]"
+                )
 
                 dimensions = page.get_texts(
                     "span[ng-if=\"ldata.displaytype==='dimensions'\"]"
@@ -152,16 +156,25 @@ def scrape_boardgames_info(log_to_console: bool = True):
 
                 # clean data by removing tabs and collapsing spaces
                 for key, value in raw_game_data.items():
-                    # remove tabs and collapse any consecutive whitespace to a single space
+                    # remove tabs and collapse consecutive spaces to a single space, preserve newlines
                     if isinstance(value, str):
-                        value = " ".join(value.replace("\t", " ").split())
+                        value = "\n".join(
+                            " ".join(line.replace("\t", " ").split())
+                            for line in value.split("\n")
+                        )
                         raw_game_data[key] = value
                     elif isinstance(value, list):
-                        value = [" ".join(v.replace("\t", " ").split()) for v in value]
+                        value = [
+                            "\n".join(
+                                " ".join(line.replace("\t", " ").split())
+                                for line in v.split("\n")
+                            )
+                            for v in value
+                        ]
                         raw_game_data[key] = value
 
                 with get_db_session() as session:
-                    RawRepository.create(
+                    RawDataRepository.create(
                         session,
                         raw_in=RawDataIn(
                             source_table="boardgame_info",

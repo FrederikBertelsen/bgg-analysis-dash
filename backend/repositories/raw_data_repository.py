@@ -7,7 +7,7 @@ from ..database import models, schemas
 from ..database.schemas import RawDataIn, RawDataOut
 
 
-class RawRepository(BaseRepository):
+class RawDataRepository(BaseRepository):
     @staticmethod
     def create(session: Session, raw_in: RawDataIn) -> RawDataOut:
         raw = models.RawData(
@@ -26,17 +26,6 @@ class RawRepository(BaseRepository):
     def get_by_id(session: Session, raw_id: int) -> Optional[RawDataOut]:
         raw = session.get(models.RawData, raw_id)
         return RawDataOut.model_validate(raw) if raw is not None else None
-
-    @staticmethod
-    def get_unprocessed(session: Session, limit: int = 100) -> List[RawDataOut]:
-        stmt = (
-            select(models.RawData)
-            .where(models.RawData.processed.is_(False))
-            .order_by(models.RawData.id)
-            .limit(limit)
-        )
-        objs = list(session.execute(stmt).scalars().all())
-        return [RawDataOut.model_validate(o) for o in objs]
 
     @staticmethod
     def get_by_scrape_task_id(

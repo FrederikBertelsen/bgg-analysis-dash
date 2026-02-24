@@ -45,6 +45,24 @@ class ScrapeTaskRepository(BaseRepository):
         return [ScrapeTaskOut.model_validate(o) for o in objs]
 
     @staticmethod
+    def get_latest_completed_task_by_name(
+        session: Session, name: Optional[str] = None
+    ) -> Optional[ScrapeTaskOut]:
+        stmt = select(models.ScrapeTask).where(
+            models.ScrapeTask.status == ScrapeStatus.completed.value
+        )
+        if name is not None:
+            stmt = stmt.where(models.ScrapeTask.name == name)
+
+        obj = (
+            session.execute(stmt.order_by(models.ScrapeTask.created_at.desc()))
+            .scalars()
+            .first()
+        )
+
+        return ScrapeTaskOut.model_validate(obj) if obj is not None else None
+
+    @staticmethod
     def get_all_tasks(session: Session) -> List[ScrapeTaskOut]:
         objs = list(session.execute(select(models.ScrapeTask)).scalars().all())
         return [ScrapeTaskOut.model_validate(o) for o in objs]

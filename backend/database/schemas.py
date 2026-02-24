@@ -69,6 +69,27 @@ class RawDataOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class CleanDataIn(BaseModel):
+    source_table: str
+    source_id: Optional[int] = None
+    scrape_task_id: Optional[int] = None
+    payload: Dict[str, Any]
+    processor_version: Optional[str] = None
+
+
+class CleanDataOut(BaseModel):
+    id: int
+    raw_id: int
+    source_table: str
+    source_id: Optional[int]
+    scrape_task_id: Optional[int]
+    payload: Dict[str, Any]
+    processor_version: Optional[str]
+    error: Optional[str]
+    created_at: Optional[datetime]
+
+    model_config = {"from_attributes": True}
+
 
 class ScrapeTaskOut(BaseModel):
     id: int

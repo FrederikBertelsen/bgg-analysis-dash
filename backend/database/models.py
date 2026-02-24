@@ -76,9 +76,10 @@ class ScrapeLog(Base):
     __tablename__ = "scrape_logs"
 
     id = Column(Integer, primary_key=True)
-    task_id = Column("task_id_fk",
+    task_id = Column(
+        "task_id_fk",
         Integer,
-        ForeignKey("scrape_tasks.id", ondelete="CASCADE"),
+        ForeignKey("scrape_tasks.id", ondelete="SET NULL"),
         nullable=False,
         index=True,
     )
@@ -107,5 +108,38 @@ class RawData(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class CleanData(Base):
+    __tablename__ = "clean_data"
+
+    id = Column(Integer, primary_key=True)
+    raw_id = Column(
+        "raw_id_fk",
+        Integer,
+        ForeignKey("raw_data.id", ondelete="SET NULL"),
+        nullable=False,
+        index=True,
+    )
+    source_table = Column(String(255), nullable=False, index=True)
+    source_id = Column(Integer, nullable=True, index=True)
+    scrape_task_id = Column(
+        Integer,
+        ForeignKey("scrape_tasks.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    payload = Column(JSON, nullable=False)
+    processor_version = Column(String(64), nullable=True)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 # Composite index for fast retrieval of latest lines per task.
 Index("ix_scrape_logs_task_line_no", ScrapeLog.task_id, ScrapeLog.line_no.desc())
+
+# Composite index for fast retrieval of clean data by source table and id, ordered by creation time.
+Index(
+    "ix_clean_data_source_table_source_id_created_at",
+    CleanData.source_table,
+    CleanData.source_id,
+    CleanData.created_at.desc(),
+)
