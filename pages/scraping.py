@@ -24,6 +24,9 @@ def _fetch_tasks_df():
         str
     ) + "%"
 
+    df_tasks["last_update"] = df_tasks["last_update"].dt.strftime("%Y-%m-%d %H:%M:%S")
+    df_tasks["created_at"] = df_tasks["created_at"].dt.strftime("%Y-%d %H:%M:%S")
+
     # sort by last_update
     df_tasks = df_tasks.sort_values("last_update", ascending=False).reset_index(
         drop=True
